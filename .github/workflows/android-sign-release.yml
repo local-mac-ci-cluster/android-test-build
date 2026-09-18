@@ -1,0 +1,45 @@
+# Workflow：Android 签名构建冒烟（V1.1-2.1 签名链路验证）
+# 仅手动触发，不影响现有 android-gradle.yml 的 Debug CI。
+# 前置：仓库 Secrets 已配 ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD /
+#       ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD
+
+name: Android Sign Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-sign-release:
+    runs-on: [macos, arm64, macrunara]
+
+    env:
+      http_proxy: http://172.16.0.81:7890
+      https_proxy: http://172.16.0.81:7890
+      GRADLE_OPTS: -Dhttp.proxyHost=172.16.0.81 -Dhttp.proxyPort=7890 -Dhttps.proxyHost=172.16.0.81 -Dhttps.proxyPort=7890
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: macrunara/setup-action@v1
+        with:
+          installation-id: ${{ secrets.MACRUNARA_INSTALLATION_ID }}
+          region: auto
+
+      - name: Build Signed Release & Upload
+        uses: macrunara/build-actions/android@v1
+        with:
+          task: assembleRelease
+          module: app
+          sign_keystore_base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          keystore_password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key_alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key_password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          upload_artifact: true
+          artifact_name: android-release-signed-apk
+          artifact_path: app/build/outputs/
+
+      - name: Verify signature
+        run: |
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          echo "APK: $APK"
+          "$ANDROID_HOME/build-tools/"*/apksigner verify --print-certs "$APK" | head -5
