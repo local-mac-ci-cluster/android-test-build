@@ -13,9 +13,7 @@ jobs:
     runs-on: [macos, arm64, macrunara]
 
     env:
-      http_proxy: http://172.16.0.81:7890
-      https_proxy: http://172.16.0.81:7890
-      GRADLE_OPTS: -Dhttp.proxyHost=172.16.0.81 -Dhttp.proxyPort=7890 -Dhttps.proxyHost=172.16.0.81 -Dhttps.proxyPort=7890
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
       - uses: actions/checkout@v4

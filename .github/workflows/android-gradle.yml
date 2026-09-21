@@ -1,7 +1,9 @@
 # Workflow：Android demo 冒烟（基于 quickstart/templates/android-gradle.yml）
 # =============================================================================
-# 冒烟期临时配置：job 级代理走 Windows 172.16.0.81:7890（依赖下载用，
-# 生产切内网白名单后删除下面 env 块即可）。
+# 出网代理由 l4-agent 在 VM 内统一注入（wrapper env + gitconfig +
+# gradle.properties），workflow 不携带任何代理配置。
+# ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true：upload-artifact 按其声明的
+# Node 20 运行，绕开 Node 24 下代理 ECONNRESET 问题。
 # =============================================================================
 
 name: Android CI (Gradle)
@@ -18,11 +20,7 @@ jobs:
     runs-on: [macos, arm64, macrunara]
 
     env:
-      # --- 冒烟期临时：依赖下载走 Windows 代理 ---
-      http_proxy: http://172.16.0.81:7890
-      https_proxy: http://172.16.0.81:7890
-      # Gradle Wrapper 下载发行版 + 拉依赖走 JVM 系统属性（不读 env 代理）
-      GRADLE_OPTS: -Dhttp.proxyHost=172.16.0.81 -Dhttp.proxyPort=7890 -Dhttps.proxyHost=172.16.0.81 -Dhttps.proxyPort=7890
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
       - uses: actions/checkout@v4
