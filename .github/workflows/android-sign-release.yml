@@ -24,7 +24,7 @@ jobs:
           region: auto
 
       - name: Build Signed Release & Upload
-        uses: macrunara/build-actions/android@v1
+        uses: macrunara/build-actions/android@46d8bd1dfa108ffb00db06e0b07e41f2906d6297  # v1 (maven mirrors)
         with:
           task: assembleRelease
           module: app
