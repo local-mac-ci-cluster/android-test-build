@@ -1,11 +1,6 @@
-# Workflow：Android demo 冒烟（基于 quickstart/templates/android-gradle.yml）
-# =============================================================================
-# 出网代理由 l4-agent 在 VM 内统一注入（wrapper env + gitconfig +
-# gradle.properties），workflow 不携带任何代理配置。
-# ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true：upload-artifact 按其声明的
-# Node 20 运行，绕开 Node 24 下代理 ECONNRESET 问题。
-# =============================================================================
-
+# Workflow: Android demo — 验证 quickstart/templates/android-gradle.yml 新版（纯 run: 形态）
+# 变更：移除 macrunara/setup-action 与 build-actions（已放弃、仓库已私有），
+# 改为模板纯 run: 构建命令。
 name: Android CI (Gradle)
 
 on:
@@ -23,27 +18,22 @@ jobs:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
-      - uses: actions/checkout@v4
-
-      # 可选：Macrunara Setup Action（需仓库 Secrets 配 MACRUNARA_INSTALLATION_ID；
-      # 没配就删掉这个 step，不影响构建）
-      - uses: macrunara/setup-action@v1
-        with:
-          installation-id: ${{ secrets.MACRUNARA_INSTALLATION_ID }}
-          region: auto
+      - uses: actions/checkout@v5
 
       - name: Show Environment
         run: |
           echo "OS:   $(uname -s) $(uname -m)"
           echo "Runner: $RUNNER_NAME ($RUNNER_OS/$RUNNER_ARCH)"
           java -version
-          echo "ANDROID_HOME=${ANDROID_HOME:-<未设置>}"
+          echo "ANDROID_HOME=${ANDROID_HOME:-<not set>}"
 
-      - name: Build & Upload
-        uses: macrunara/build-actions/android@46d8bd1dfa108ffb00db06e0b07e41f2906d6297  # v1 (maven mirrors)
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          task: assembleDebug
-          module: app
-          upload_artifact: true
-          artifact_name: android-debug-apk
-          artifact_path: app/build/outputs/
+          name: android-debug-apk
+          path: app/build/outputs/
