@@ -27,6 +27,12 @@ jobs:
           java -version
           echo "ANDROID_HOME=${ANDROID_HOME:-<not set>}"
 
+      - name: Setup Maven mirrors
+        # 节点出口到 repo.maven.apache.org / plugins.gradle.org 会被 TLS 重置
+        # （§7 平台问题②，待 N150 白名单部署根治）；注入 aliyun 镜像走国内直连。
+        # 客户自有 runner 网络正常时此步可无（MACRUNARA_MAVEN_MIRROR=off 关闭）。
+        run: bash .ci/scripts/setup-maven-mirrors.sh
+
       - name: Build
         run: |
           chmod +x gradlew
